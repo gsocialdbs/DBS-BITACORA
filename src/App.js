@@ -64,32 +64,37 @@ export default function App() {
     try {
       // Convertir el objeto para que coincida con la estructura de la base de datos
       const patientData = {
-        ...newPatient,
-        anio_ingreso: newPatient.anioIngreso,
+        nombre: newPatient.nombre,
+        dni: newPatient.dni,
+        grado: newPatient.grado,
+        edad: newPatient.edad ? parseInt(newPatient.edad) : null,
+        sexo: newPatient.sexo,
+        promocion: newPatient.promocion,
+        anio_ingreso: newPatient.anioIngreso ? parseInt(newPatient.anioIngreso) : null,
         tiempo_institucion: newPatient.tiempoInstitucion,
         direccion_perteneces: newPatient.direccionPerteneces,
+        asignacion: newPatient.asignacion,
         lugar_asignacion: newPatient.lugarAsignacion,
         donde_vive: newPatient.dondeVive,
-        fecha_ingreso: newPatient.fechaIngreso,
+        celular: newPatient.celular,
+        diagnostico: newPatient.diagnostico,
+        fecha_ingreso: newPatient.fechaIngreso || null,
         motivo_ingreso: newPatient.motivoIngreso,
         accidente_detalles: newPatient.accidenteDetalles,
         quien_traslado: newPatient.quienTraslado,
+        hospital: newPatient.hospital,
+        sala: newPatient.sala,
+        cama: newPatient.cama,
         familiar_nombre: newPatient.familiarNombre,
         familiar_parentesco: newPatient.familiarParentesco,
         familiar_celular: newPatient.familiarCelular,
-        fecha_alta: newPatient.fechaAlta,
+        status: newPatient.status || 'interno',
+        fecha_alta: newPatient.fechaAlta || null,
         observaciones_alta: newPatient.observacionesAlta,
-        dias_incapacidad: newPatient.diasIncapacidad
+        dias_incapacidad: newPatient.diasIncapacidad ? parseInt(newPatient.diasIncapacidad) : null
       };
 
       const createdPatient = await pacientesService.create(patientData);
-      
-      // Agregar visitas si existen
-      if (newPatient.visitas && newPatient.visitas.length > 0) {
-        // Aquí podríamos agregar las visitas, pero por simplicidad las manejamos en memoria por ahora
-        createdPatient.visitas = newPatient.visitas;
-      }
-
       setPatients(prevPatients => [createdPatient, ...prevPatients]);
       return createdPatient;
     } catch (err) {
