@@ -1,72 +1,334 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutHeader } from './components/LayoutHeader';
 import { BitacoraMain } from './components/BitacoraMain';
 import { FallecidosMain } from './components/FallecidosMain';
 import { FuncionariosLesionadosMain } from './components/FuncionariosLesionadosMain';
 import { IndemnizacionesMain } from './components/IndemnizacionesMain';
+import { 
+  pacientesService, 
+  funcionariosService, 
+  fallecidosService, 
+  indemnizacionesService 
+} from './services/database';
 
 export default function App() {
+  // Estados para datos
   const [patients, setPatients] = useState([]);
   const [fallecidos, setFallecidos] = useState([]);
   const [funcionariosLesionados, setFuncionariosLesionados] = useState([]);
   const [indemnizaciones, setIndemnizaciones] = useState([]);
+  
+  // Estados para UI
   const [activeTab, setActiveTab] = useState('bitacora');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const addPatient = (newPatient) => {
-    setPatients(prevPatients => [...prevPatients, newPatient]);
+  // Cargar datos al inicializar la aplicación
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Cargar datos en paralelo
+      const [
+        patientsData,
+        fallecidosData,
+        funcionariosData,
+        indemnizacionesData
+      ] = await Promise.all([
+        pacientesService.getAll(),
+        fallecidosService.getAll(),
+        funcionariosService.getAll(),
+        indemnizacionesService.getAll()
+      ]);
+
+      setPatients(patientsData || []);
+      setFallecidos(fallecidosData || []);
+      setFuncionariosLesionados(funcionariosData || []);
+      setIndemnizaciones(indemnizacionesData || []);
+
+    } catch (err) {
+      console.error('Error cargando datos:', err);
+      setError('Error al cargar los datos. Por favor, recarga la página.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deletePatient = (id) => {
-    setPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+  // ================== FUNCIONES PARA PACIENTES ==================
+  const addPatient = async (newPatient) => {
+    try {
+      // Convertir el objeto para que coincida con la estructura de la base de datos
+      const patientData = {
+        ...newPatient,
+        anio_ingreso: newPatient.anioIngreso,
+        tiempo_institucion: newPatient.tiempoInstitucion,
+        direccion_perteneces: newPatient.direccionPerteneces,
+        lugar_asignacion: newPatient.lugarAsignacion,
+        donde_vive: newPatient.dondeVive,
+        fecha_ingreso: newPatient.fechaIngreso,
+        motivo_ingreso: newPatient.motivoIngreso,
+        accidente_detalles: newPatient.accidenteDetalles,
+        quien_traslado: newPatient.quienTraslado,
+        familiar_nombre: newPatient.familiarNombre,
+        familiar_parentesco: newPatient.familiarParentesco,
+        familiar_celular: newPatient.familiarCelular,
+        fecha_alta: newPatient.fechaAlta,
+        observaciones_alta: newPatient.observacionesAlta,
+        dias_incapacidad: newPatient.diasIncapacidad
+      };
+
+      const createdPatient = await pacientesService.create(patientData);
+      
+      // Agregar visitas si existen
+      if (newPatient.visitas && newPatient.visitas.length > 0) {
+        // Aquí podríamos agregar las visitas, pero por simplicidad las manejamos en memoria por ahora
+        createdPatient.visitas = newPatient.visitas;
+      }
+
+      setPatients(prevPatients => [createdPatient, ...prevPatients]);
+      return createdPatient;
+    } catch (err) {
+      console.error('Error agregando paciente:', err);
+      setError('Error al agregar el paciente. Por favor, intenta de nuevo.');
+      throw err;
+    }
   };
 
-  const updatePatientStatus = (id, newStatus, dischargeInfo = {}) => {
-    setPatients(prevPatients =>
-      prevPatients.map(patient =>
-        patient.id === id ? { ...patient, status: newStatus, ...dischargeInfo } : patient
-      )
+  const deletePatient = async (id) => {
+    try {
+      await pacientesService.delete(id);
+      setPatients(prevPatients => prevPatients.filter(patient => patient.id !== id));
+    } catch (err) {
+      console.error('Error eliminando paciente:', err);
+      setError('Error al eliminar el paciente. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const updatePatientStatus = async (id, newStatus, dischargeInfo = {}) => {
+    try {
+      const updates = {
+        status: newStatus,
+        ...dischargeInfo
+      };
+
+      const updatedPatient = await pacientesService.update(id, updates);
+      setPatients(prevPatients =>
+        prevPatients.map(patient =>
+          patient.id === id ? { ...patient, ...updates } : patient
+        )
+      );
+      return updatedPatient;
+    } catch (err) {
+      console.error('Error actualizando estado del paciente:', err);
+      setError('Error al actualizar el estado del paciente. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const updatePatient = async (updatedPatient) => {
+    try {
+      // Convertir el objeto para que coincida con la estructura de la base de datos
+      const patientData = {
+        ...updatedPatient,
+        anio_ingreso: updatedPatient.anioIngreso,
+        tiempo_institucion: updatedPatient.tiempoInstitucion,
+        direccion_perteneces: updatedPatient.direccionPerteneces,
+        lugar_asignacion: updatedPatient.lugarAsignacion,
+        donde_vive: updatedPatient.dondeVive,
+        fecha_ingreso: updatedPatient.fechaIngreso,
+        motivo_ingreso: updatedPatient.motivoIngreso,
+        accidente_detalles: updatedPatient.accidenteDetalles,
+        quien_traslado: updatedPatient.quienTraslado,
+        familiar_nombre: updatedPatient.familiarNombre,
+        familiar_parentesco: updatedPatient.familiarParentesco,
+        familiar_celular: updatedPatient.familiarCelular,
+        fecha_alta: updatedPatient.fechaAlta,
+        observaciones_alta: updatedPatient.observacionesAlta,
+        dias_incapacidad: updatedPatient.diasIncapacidad
+      };
+
+      await pacientesService.update(updatedPatient.id, patientData);
+      setPatients(prevPatients =>
+        prevPatients.map(patient =>
+          patient.id === updatedPatient.id ? { ...patient, ...updatedPatient } : patient
+        )
+      );
+    } catch (err) {
+      console.error('Error actualizando paciente:', err);
+      setError('Error al actualizar el paciente. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  // ================== FUNCIONES PARA FALLECIDOS ==================
+  const addFallecido = async (newFallecido) => {
+    try {
+      const fallecidoData = {
+        ...newFallecido,
+        policia_fallecido: newFallecido.policiaFallecido,
+        no_expediente: newFallecido.noExpediente,
+        causa_muerte: newFallecido.causaMuerte,
+        fecha_muerte: newFallecido.fechaMuerte,
+        lugar_muerte: newFallecido.lugarMuerte,
+        documentos_adjuntos: newFallecido.documentosAdjuntos || []
+      };
+
+      const createdFallecido = await fallecidosService.create(fallecidoData);
+      setFallecidos(prevFallecidos => [createdFallecido, ...prevFallecidos]);
+      return createdFallecido;
+    } catch (err) {
+      console.error('Error agregando fallecido:', err);
+      setError('Error al agregar el fallecido. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const onDeleteFallecido = async (id) => {
+    try {
+      await fallecidosService.delete(id);
+      setFallecidos(prevFallecidos => prevFallecidos.filter(fallecido => fallecido.id !== id));
+    } catch (err) {
+      console.error('Error eliminando fallecido:', err);
+      setError('Error al eliminar el fallecido. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  // ================== FUNCIONES PARA FUNCIONARIOS LESIONADOS ==================
+  const addFuncionarioLesionado = async (newFuncionario) => {
+    try {
+      const funcionarioData = {
+        ...newFuncionario,
+        funcionario_nombre: newFuncionario.funcionarioNombre,
+        funcionario_policial: newFuncionario.funcionarioPolicial,
+        no_expediente: newFuncionario.noExpediente,
+        miembro_amputado: newFuncionario.miembroAmputado,
+        hospital_traslado: newFuncionario.hospitalTraslado,
+        total_gastos: newFuncionario.totalGastos || 0
+      };
+
+      const createdFuncionario = await funcionariosService.create(funcionarioData);
+      setFuncionariosLesionados(prev => [createdFuncionario, ...prev]);
+      return createdFuncionario;
+    } catch (err) {
+      console.error('Error agregando funcionario lesionado:', err);
+      setError('Error al agregar el funcionario lesionado. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const onDeleteFuncionarioLesionado = async (id) => {
+    try {
+      await funcionariosService.delete(id);
+      setFuncionariosLesionados(prev => prev.filter(f => f.id !== id));
+    } catch (err) {
+      console.error('Error eliminando funcionario lesionado:', err);
+      setError('Error al eliminar el funcionario lesionado. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  // ================== FUNCIONES PARA INDEMNIZACIONES ==================
+  const addIndemnizacion = async (newIndemnizacion) => {
+    try {
+      const indemnizacionData = {
+        ...newIndemnizacion,
+        funcionario_policial: newIndemnizacion.funcionarioPolicial,
+        no_expediente: newIndemnizacion.noExpediente,
+        estado_expediente: newIndemnizacion.estadoExpediente,
+        suma_pagar: newIndemnizacion.sumaPagar,
+        causa_indemnizacion: newIndemnizacion.causaIndemnizacion,
+        fecha_solicitud: newIndemnizacion.fechaSolicitud,
+        fecha_pago: newIndemnizacion.fechaPago
+      };
+
+      const createdIndemnizacion = await indemnizacionesService.create(indemnizacionData);
+      setIndemnizaciones(prev => [createdIndemnizacion, ...prev]);
+      return createdIndemnizacion;
+    } catch (err) {
+      console.error('Error agregando indemnización:', err);
+      setError('Error al agregar la indemnización. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const onDeleteIndemnizacion = async (id) => {
+    try {
+      await indemnizacionesService.delete(id);
+      setIndemnizaciones(prev => prev.filter(i => i.id !== id));
+    } catch (err) {
+      console.error('Error eliminando indemnización:', err);
+      setError('Error al eliminar la indemnización. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  const updateIndemnizacion = async (updatedIndemnizacion) => {
+    try {
+      const indemnizacionData = {
+        ...updatedIndemnizacion,
+        funcionario_policial: updatedIndemnizacion.funcionarioPolicial,
+        no_expediente: updatedIndemnizacion.noExpediente,
+        estado_expediente: updatedIndemnizacion.estadoExpediente,
+        suma_pagar: updatedIndemnizacion.sumaPagar,
+        causa_indemnizacion: updatedIndemnizacion.causaIndemnizacion,
+        fecha_solicitud: updatedIndemnizacion.fechaSolicitud,
+        fecha_pago: updatedIndemnizacion.fechaPago
+      };
+
+      await indemnizacionesService.update(updatedIndemnizacion.id, indemnizacionData);
+      setIndemnizaciones(prev =>
+        prev.map(i =>
+          i.id === updatedIndemnizacion.id ? { ...i, ...updatedIndemnizacion } : i
+        )
+      );
+    } catch (err) {
+      console.error('Error actualizando indemnización:', err);
+      setError('Error al actualizar la indemnización. Por favor, intenta de nuevo.');
+      throw err;
+    }
+  };
+
+  // Mostrar pantalla de carga
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando datos...</p>
+        </div>
+      </div>
     );
-  };
+  }
 
-  const updatePatient = (updatedPatient) => {
-    setPatients(prevPatients =>
-      prevPatients.map(patient =>
-        patient.id === updatedPatient.id ? updatedPatient : patient
-      )
+  // Mostrar error si hay alguno
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
+          <div className="text-red-600 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error de Conexión</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={loadAllData}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
     );
-  };
-
-  const addFallecido = (newFallecido) => {
-    setFallecidos(prevFallecidos => [...prevFallecidos, newFallecido]);
-  };
-
-  const onDeleteFallecido = (id) => {
-    setFallecidos(prevFallecidos => prevFallecidos.filter(fallecido => fallecido.id !== id));
-  };
-
-  const addFuncionarioLesionado = (newFuncionario) => {
-    setFuncionariosLesionados(prev => [...prev, newFuncionario]);
-  };
-
-  const onDeleteFuncionarioLesionado = (id) => {
-    setFuncionariosLesionados(prev => prev.filter(f => f.id !== id));
-  };
-
-  const addIndemnizacion = (newIndemnizacion) => {
-    setIndemnizaciones(prev => [...prev, newIndemnizacion]);
-  };
-
-  const onDeleteIndemnizacion = (id) => {
-    setIndemnizaciones(prev => prev.filter(i => i.id !== id));
-  };
-
-  const updateIndemnizacion = (updatedIndemnizacion) => {
-    setIndemnizaciones(prev =>
-      prev.map(i =>
-        i.id === updatedIndemnizacion.id ? updatedIndemnizacion : i
-      )
-    );
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans antialiased">
@@ -108,4 +370,3 @@ export default function App() {
     </div>
   );
 }
-// DONE
