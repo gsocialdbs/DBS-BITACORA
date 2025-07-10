@@ -30,30 +30,27 @@ export default function App() {
 
   const loadAllData = async () => {
     try {
+      console.log('Iniciando carga de datos...')
       setLoading(true);
       setError(null);
 
       // Cargar datos en paralelo
-      const [
-        patientsData,
-        fallecidosData,
-        funcionariosData,
-        indemnizacionesData
-      ] = await Promise.all([
-        pacientesService.getAll(),
-        fallecidosService.getAll(),
-        funcionariosService.getAll(),
-        indemnizacionesService.getAll()
-      ]);
+      const patientsData = await pacientesService.getAll();
+      console.log('Datos de pacientes cargados:', patientsData)
+
+      const fallecidosData = await fallecidosService.getAll();
+      const funcionariosData = await funcionariosService.getAll();
+      const indemnizacionesData = await indemnizacionesService.getAll();
 
       setPatients(patientsData || []);
       setFallecidos(fallecidosData || []);
       setFuncionariosLesionados(funcionariosData || []);
       setIndemnizaciones(indemnizacionesData || []);
 
+      console.log('Todos los datos cargados exitosamente')
     } catch (err) {
       console.error('Error cargando datos:', err);
-      setError('Error al cargar los datos. Por favor, recarga la página.');
+      setError(`Error al cargar los datos: ${err.message}`);
     } finally {
       setLoading(false);
     }
