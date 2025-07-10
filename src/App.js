@@ -91,8 +91,14 @@ export default function App() {
         dias_incapacidad: newPatient.diasIncapacidad ? parseInt(newPatient.diasIncapacidad) : null
       };
 
+      console.log('Agregando paciente:', patientData.nombre)
       const createdPatient = await pacientesService.create(patientData);
-      setPatients(prevPatients => [createdPatient, ...prevPatients]);
+      
+      // Recargar todos los pacientes desde la base de datos
+      const updatedPatients = await pacientesService.getAll();
+      setPatients(updatedPatients || []);
+      
+      console.log('Paciente agregado y lista actualizada')
       return createdPatient;
     } catch (err) {
       console.error('Error agregando paciente:', err);
