@@ -4,62 +4,85 @@ import { supabase } from '../lib/supabase'
 export const pacientesService = {
   // Obtener todos los pacientes
   async getAll() {
-    const { data, error } = await supabase
-      .from('pacientes')
-      .select(`
-        *,
-        visitas (*)
-      `)
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error obteniendo pacientes:', error)
-      throw error
+    try {
+      console.log('Cargando pacientes desde Supabase...')
+      const { data, error } = await supabase
+        .from('pacientes')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Error obteniendo pacientes:', error)
+        throw error
+      }
+      
+      console.log('Pacientes cargados:', data?.length || 0)
+      return data || []
+    } catch (err) {
+      console.error('Error en getAll pacientes:', err)
+      return []
     }
-    return data
   },
 
   // Crear nuevo paciente
   async create(paciente) {
-    const { data, error } = await supabase
-      .from('pacientes')
-      .insert([paciente])
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creando paciente:', error)
-      throw error
+    try {
+      console.log('Creando paciente:', paciente.nombre)
+      const { data, error } = await supabase
+        .from('pacientes')
+        .insert([paciente])
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error creando paciente:', error)
+        throw error
+      }
+      
+      console.log('Paciente creado exitosamente:', data.id)
+      return data
+    } catch (err) {
+      console.error('Error en create paciente:', err)
+      throw err
     }
-    return data
   },
 
   // Actualizar paciente
   async update(id, updates) {
-    const { data, error } = await supabase
-      .from('pacientes')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error actualizando paciente:', error)
-      throw error
+    try {
+      const { data, error } = await supabase
+        .from('pacientes')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Error actualizando paciente:', error)
+        throw error
+      }
+      return data
+    } catch (err) {
+      console.error('Error en update paciente:', err)
+      throw err
     }
-    return data
   },
 
   // Eliminar paciente
   async delete(id) {
-    const { error } = await supabase
-      .from('pacientes')
-      .delete()
-      .eq('id', id)
-    
-    if (error) {
-      console.error('Error eliminando paciente:', error)
-      throw error
+    try {
+      const { error } = await supabase
+        .from('pacientes')
+        .delete()
+        .eq('id', id)
+      
+      if (error) {
+        console.error('Error eliminando paciente:', error)
+        throw error
+      }
+    } catch (err) {
+      console.error('Error en delete paciente:', err)
+      throw err
     }
   }
 }
