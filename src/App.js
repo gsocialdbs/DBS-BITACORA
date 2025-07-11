@@ -4,6 +4,8 @@ import { BitacoraMain } from './components/BitacoraMain';
 import { FallecidosMain } from './components/FallecidosMain';
 import { FuncionariosLesionadosMain } from './components/FuncionariosLesionadosMain';
 import { IndemnizacionesMain } from './components/IndemnizacionesMain';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { authService } from './services/auth';
 import { 
   pacientesService, 
   funcionariosService, 
@@ -12,6 +14,10 @@ import {
 } from './services/database';
 
 export default function App() {
+  // Estados para autenticación
+  const [user, setUser] = useState(null);
+  const [loginError, setLoginError] = useState(null);
+  
   // Estados para datos
   const [patients, setPatients] = useState([]);
   const [fallecidos, setFallecidos] = useState([]);
@@ -23,10 +29,40 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Cargar datos al inicializar la aplicación
+  // Verificar sesión al cargar la aplicación
   useEffect(() => {
-    loadAllData();
+    const currentUser = authService.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      loadAllData();
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  // Función de login
+  const handleLogin = async (credentials) => {
+    try {
+      setLoginError(null);
+      const userData = await authService.login(credentials);
+      setUser(userData);
+      await loadAllData();
+    } catch (err) {
+      setLoginError(err.message);
+      throw err;
+    }
+  };
+
+  // Función de logout
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    setPatients([]);
+    setFallecidos([]);
+    setFuncionariosLesionados([]);
+    setIndemnizaciones([]);
+    setActiveTab('bitacora');
+  };
 
   const loadAllData = async () => {
     try {
