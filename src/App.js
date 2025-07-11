@@ -375,42 +375,79 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans antialiased">
-      <LayoutHeader onTabChange={setActiveTab} />
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {activeTab === 'bitacora' && (
-          <BitacoraMain
-            patients={patients}
-            onAddPatient={addPatient}
-            onDeletePatient={deletePatient}
-            onUpdatePatientStatus={updatePatientStatus}
-            onUpdatePatient={updatePatient}
-          />
-        )}
-        {activeTab === 'funcionarios' && (
-          <FuncionariosLesionadosMain
-            patients={patients}
-            funcionariosLesionados={funcionariosLesionados}
-            onAddFuncionarioLesionado={addFuncionarioLesionado}
-            onDeleteFuncionarioLesionado={onDeleteFuncionarioLesionado}
-          />
-        )}
-        {activeTab === 'fallecidos' && (
-          <FallecidosMain
-            fallecidos={fallecidos}
-            onAddFallecido={addFallecido}
-            onDeleteFallecido={onDeleteFallecido}
-          />
-        )}
-        {activeTab === 'indemnizaciones' && (
-          <IndemnizacionesMain
-            indemnizaciones={indemnizaciones}
-            onAddIndemnizacion={addIndemnizacion}
-            onDeleteIndemnizacion={onDeleteIndemnizacion}
-            onUpdateIndemnizacion={updateIndemnizacion}
-          />
-        )}
-      </main>
-    </div>
+    <ProtectedRoute 
+      user={user} 
+      onLogin={handleLogin} 
+      onLogout={handleLogout}
+      loginError={loginError}
+    >
+      {/* Mostrar pantalla de carga */}
+      {loading ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando datos...</p>
+          </div>
+        </div>
+      ) : error ? (
+        // Mostrar error si hay alguno
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
+            <div className="text-red-600 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Error de Conexión</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={loadAllData}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Contenido principal de la aplicación
+        <div className="min-h-screen bg-gray-50 font-sans antialiased">
+          <LayoutHeader onTabChange={setActiveTab} />
+          <main className="container mx-auto px-4 py-8 space-y-8">
+            {activeTab === 'bitacora' && (
+              <BitacoraMain
+                patients={patients}
+                onAddPatient={addPatient}
+                onDeletePatient={deletePatient}
+                onUpdatePatientStatus={updatePatientStatus}
+                onUpdatePatient={updatePatient}
+              />
+            )}
+            {activeTab === 'funcionarios' && (
+              <FuncionariosLesionadosMain
+                patients={patients}
+                funcionariosLesionados={funcionariosLesionados}
+                onAddFuncionarioLesionado={addFuncionarioLesionado}
+                onDeleteFuncionarioLesionado={onDeleteFuncionarioLesionado}
+              />
+            )}
+            {activeTab === 'fallecidos' && (
+              <FallecidosMain
+                fallecidos={fallecidos}
+                onAddFallecido={addFallecido}
+                onDeleteFallecido={onDeleteFallecido}
+              />
+            )}
+            {activeTab === 'indemnizaciones' && (
+              <IndemnizacionesMain
+                indemnizaciones={indemnizaciones}
+                onAddIndemnizacion={addIndemnizacion}
+                onDeleteIndemnizacion={onDeleteIndemnizacion}
+                onUpdateIndemnizacion={updateIndemnizacion}
+              />
+            )}
+          </main>
+        </div>
+      )}
+    </ProtectedRoute>
   );
 }
