@@ -1,7 +1,7 @@
 {
       "scripts": {
             "start": "react-scripts start",
-            "build": "mkdir -p dist && cp index.html dist/index.html",
+            "build": "react-scripts build",
             "test": "react-scripts test",
             "eject": "react-scripts eject"
       },
