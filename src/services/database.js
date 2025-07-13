@@ -305,9 +305,24 @@ export const indemnizacionesService = {
 
   // Crear nueva indemnización
   async create(indemnizacion) {
+    console.log('Datos recibidos para indemnización:', indemnizacion);
+    
+    // Mapear campos del formulario a campos de la BD
+    const indemnizacionData = {
+      funcionario_policial: indemnizacion.funcionario || indemnizacion.funcionario_policial,
+      no_expediente: indemnizacion.expediente || indemnizacion.no_expediente,
+      estado_expediente: indemnizacion.estado || indemnizacion.estado_expediente,
+      suma_pagar: indemnizacion.suma ? parseFloat(indemnizacion.suma) : (indemnizacion.suma_pagar || 0),
+      causa_indemnizacion: indemnizacion.causa || indemnizacion.causa_indemnizacion,
+      fecha_solicitud: indemnizacion.fecha || indemnizacion.fecha_solicitud,
+      observaciones: indemnizacion.observaciones
+    };
+    
+    console.log('Datos mapeados para BD:', indemnizacionData);
+    
     const { data, error } = await supabase
       .from('indemnizaciones')
-      .insert([indemnizacion])
+      .insert([indemnizacionData])
       .select()
       .single()
     
@@ -315,6 +330,8 @@ export const indemnizacionesService = {
       console.error('Error creando indemnización:', error)
       throw error
     }
+    
+    console.log('Indemnización creada exitosamente:', data);
     return data
   },
 
