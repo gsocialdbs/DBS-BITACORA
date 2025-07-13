@@ -151,9 +151,23 @@ export const funcionariosService = {
 
   // Crear nuevo funcionario lesionado
   async create(funcionario) {
+    console.log('Datos recibidos para funcionario:', funcionario);
+    
+    // Mapear campos del formulario a campos de la BD
+    const funcionarioData = {
+      funcionario_nombre: funcionario.nombre || funcionario.funcionario_nombre,
+      funcionario_policial: funcionario.funcionario || funcionario.funcionario_policial,
+      no_expediente: funcionario.expediente || funcionario.no_expediente,
+      miembro_amputado: funcionario.miembro || funcionario.miembro_amputado,
+      hospital_traslado: funcionario.hospital || funcionario.hospital_traslado,
+      total_gastos: funcionario.gastos ? parseFloat(funcionario.gastos) : (funcionario.total_gastos || 0)
+    };
+    
+    console.log('Datos mapeados para BD:', funcionarioData);
+    
     const { data, error } = await supabase
       .from('funcionarios_lesionados')
-      .insert([funcionario])
+      .insert([funcionarioData])
       .select()
       .single()
     
@@ -161,6 +175,8 @@ export const funcionariosService = {
       console.error('Error creando funcionario lesionado:', error)
       throw error
     }
+    
+    console.log('Funcionario creado exitosamente:', data);
     return data
   },
 
