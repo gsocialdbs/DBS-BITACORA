@@ -228,9 +228,23 @@ export const fallecidosService = {
 
   // Crear nuevo fallecido
   async create(fallecido) {
+    console.log('Datos recibidos para fallecido:', fallecido);
+    
+    // Mapear campos del formulario a campos de la BD
+    const fallecidoData = {
+      policia_fallecido: fallecido.nombre || fallecido.policia_fallecido,
+      no_expediente: fallecido.expediente || fallecido.no_expediente,
+      causa_muerte: fallecido.causa || fallecido.causa_muerte,
+      fecha_muerte: fallecido.fecha || fallecido.fecha_muerte,
+      lugar_muerte: fallecido.lugar || fallecido.lugar_muerte,
+      beneficiarios: fallecido.beneficiarios
+    };
+    
+    console.log('Datos mapeados para BD:', fallecidoData);
+    
     const { data, error } = await supabase
       .from('fallecidos')
-      .insert([fallecido])
+      .insert([fallecidoData])
       .select()
       .single()
     
@@ -238,6 +252,8 @@ export const fallecidosService = {
       console.error('Error creando fallecido:', error)
       throw error
     }
+    
+    console.log('Fallecido creado exitosamente:', data);
     return data
   },
 
