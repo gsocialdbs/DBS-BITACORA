@@ -55,7 +55,6 @@ export const funcionariosService = {
     try {
       console.log('Datos recibidos para funcionario:', funcionario);
       
-      // MAPEO EXACTO basado en Supabase
       const funcionarioData = {
         funcionario_nombre: funcionario.nombre,
         funcionario_policial: funcionario.funcionario, 
@@ -104,7 +103,6 @@ export const fallecidosService = {
     try {
       console.log('Datos recibidos para fallecido:', fallecido);
       
-      // MAPEO EXACTO basado en Supabase (SIN asignacion)
       const fallecidoData = {
         policia_fallecido: fallecido.nombre,
         no_expediente: fallecido.expediente,
@@ -153,7 +151,6 @@ export const indemnizacionesService = {
     try {
       console.log('Datos recibidos para indemnización:', indemnizacion);
       
-      // MAPEO EXACTO basado en Supabase
       const indemnizacionData = {
         funcionario_policial: indemnizacion.funcionario,
         no_expediente: indemnizacion.expediente,
