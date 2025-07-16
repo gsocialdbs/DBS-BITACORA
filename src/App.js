@@ -68,7 +68,6 @@ export default function App() {
   const loadAllData = async () => {
     try {
       console.log('Iniciando carga de datos...')
-      setLoading(true);
       setError(null);
 
       // Cargar datos en paralelo
