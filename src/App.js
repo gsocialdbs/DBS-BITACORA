@@ -46,7 +46,8 @@ export default function App() {
       setLoginError(null);
       const userData = await authService.login(credentials);
       setUser(userData);
-      await loadAllData();
+      // Cargar datos después de autenticación exitosa, sin bloquear el login
+      loadAllData();
     } catch (err) {
       setLoginError(err.message);
       throw err;
@@ -67,7 +68,6 @@ export default function App() {
   const loadAllData = async () => {
     try {
       console.log('Iniciando carga de datos...')
-      setLoading(true);
       setError(null);
 
       // Cargar datos en paralelo
